@@ -15,9 +15,11 @@ export const dbBaseCommentSchema = z.object({
   updatedAt: z.string().nullable(),
   publishedAt: z.string().nullable(),
   authorId: z.string().nullable(),
+  authorDocumentId: z.string().nullable(),
   authorName: z.string().nullable(),
   authorEmail: z.string().email().nullable(),
   authorAvatar: z.string().nullable(),
   authorUser: z.union([z.string(), z.object({ id: z.number(), email: z.string().email() })]).optional().nullable(),
   locale: z.string().nullable(),
+  reactionsCount: z.number().int().min(0).nullable(),
 });

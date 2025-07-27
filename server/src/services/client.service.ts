@@ -28,6 +28,7 @@ export const clientService = ({ strapi }: StrapiContext) => {
         });
       return {
         authorId: user.id,
+        authorDocumentId: user.documentId || dbUser?.documentId || null,
         authorName: user.username,
         authorEmail: user.email,
         authorAvatar: dbUser?.avatar?.url || null,
@@ -35,6 +36,7 @@ export const clientService = ({ strapi }: StrapiContext) => {
     } else if (author) {
       return {
         authorId: author.id,
+        authorDocumentId: author.documentId || null,
         authorName: author.name,
         authorEmail: author.email,
         authorAvatar: author.avatar,
@@ -64,7 +66,28 @@ export const clientService = ({ strapi }: StrapiContext) => {
       );
       const threadData = await tryCatch(
         async () => {
-          return threadOf ? await this.getCommonService().findOne({ id: threadOf, related: relation, locale: locale || null }) : null;
+          if (!threadOf) return null;
+          
+          // Check if threadOf is a documentId (string format) or numeric ID
+          const isDocumentId = typeof threadOf === 'string' && isNaN(Number(threadOf));
+          
+          if (isDocumentId) {
+            // First, find the comment by documentId to get its numeric ID
+            const threadComment = await getCommentRepository(strapi).findOne({
+              where: { documentId: threadOf },
+              populate: { authorUser: true },
+            });
+            
+            if (!threadComment) {
+              throw new PluginError(400, 'Thread comment with provided documentId does not exist');
+            }
+            
+            // Use the numeric ID from the found comment
+            return await this.getCommonService().findOne({ id: threadComment.id, related: relation, locale: locale || null });
+          } else {
+            // Original logic for numeric ID
+            return await this.getCommonService().findOne({ id: threadOf, related: relation, locale: locale || null });
+          }
         },
         new PluginError(400, 'Thread does not exist'),
       );
@@ -90,7 +113,7 @@ export const clientService = ({ strapi }: StrapiContext) => {
       const comment = await getCommentRepository(strapi).create({
         data: {
           ...authorData,
-          threadOf,
+          threadOf: linkToThread ? linkToThread.id : null,
           locale,
           content: clearContent,
           related: relation,
@@ -278,53 +301,10 @@ export const clientService = ({ strapi }: StrapiContext) => {
     },
 
     async sendResponseNotification(entity: Comment) {
-      if (entity.threadOf) {
-        const thread = typeof entity.threadOf === 'object' ? entity.threadOf : await this.getCommonService().findOne({ id: entity.threadOf });
-        let emailRecipient = thread?.author?.email;
-        if (thread.authorUser && !emailRecipient) {
-          const strapiUser = typeof thread.authorUser === 'object' ? thread.authorUser : await strapi.query('plugin::users-permissions.user').findOne({
-            where: { id: thread.authorUser },
-          });
-          emailRecipient = strapiUser?.email;
-        }
-
-        if (emailRecipient) {
-          const superAdmin = await strapi.query('admin::user')
-                                         .findOne({
-                                           where: {
-                                             roles: { code: 'strapi-super-admin' },
-                                           },
-                                         });
-
-          const emailSender = await this.getCommonService().getConfig('client.contactEmail', superAdmin.email);
-          const clientAppUrl = await this.getCommonService().getConfig('client.url', 'our site');
-
-          try {
-            await strapi
-            .plugin('email')
-            .service('email')
-            .send({
-              to: [emailRecipient],
-              from: emailSender,
-              subject: 'You\'ve got a new response to your comment',
-              text: `Hello ${thread?.author?.name || emailRecipient}!
-                You've got a new response to your comment by ${entity?.author?.name || entity?.author?.email}.
-                
-                ------
-
-                "${entity.content}"
-
-                ------
-                
-                Visit ${clientAppUrl} and continue the discussion.
-                `,
-            });
-          } catch (err) {
-            strapi.log.error(err);
-            throw err;
-          }
-        }
-      }
+      // Email notifications disabled to prevent timeout issues
+      // If you want to re-enable email notifications for replies, 
+      // make sure you have properly configured the email plugin
+      return;
     },
   });
 };

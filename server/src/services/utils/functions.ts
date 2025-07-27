@@ -7,6 +7,7 @@ import { Comment, CommentWithRelated } from '../../validators/repositories';
 
 interface StrapiAuthorUser {
   id: Id;
+  documentId?: string;
   username: string;
   email: string;
   avatar?: string | object;
@@ -71,6 +72,7 @@ export const buildAuthorModel = (
   const {
     authorUser,
     authorId,
+    authorDocumentId,
     authorName,
     authorEmail,
     authorAvatar,
@@ -87,6 +89,7 @@ export const buildAuthorModel = (
       }),
       {
         id: user.id,
+        documentId: user.documentId,
         name: user.username,
         email: user.email,
         avatar: user.avatar,
@@ -95,6 +98,7 @@ export const buildAuthorModel = (
   } else if (authorId) {
     author = {
       id: authorId,
+      documentId: authorDocumentId,
       name: authorName,
       email: authorEmail,
       avatar: authorAvatar,

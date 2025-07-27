@@ -51,6 +51,10 @@ export default {
       type: "string",
       configurable: false,
     },
+    authorDocumentId: {
+      type: "string",
+      configurable: false,
+    },
     authorName: {
       type: "string",
       configurable: false,
@@ -91,6 +95,11 @@ export default {
       type: "relation",
       relation: "oneToOne",
       target: "plugin::comments.comment",
+      configurable: false,
+    },
+    reactionsCount: {
+      type: "integer",
+      default: 0,
       configurable: false,
     },
   },

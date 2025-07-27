@@ -45,6 +45,7 @@ export type Comment<TAuthor = CommentAuthor> = {
 
 export type CommentAuthor = {
   id: Id;
+  documentId?: string;
   name?: string;
   email?: string;
   avatar?: string | object;
@@ -52,6 +53,7 @@ export type CommentAuthor = {
 
 export type CommentAuthorPartial = {
   authorId?: Id;
+  authorDocumentId?: string;
   authorName?: string;
   authorEmail?: string;
   authorAvatar?: string;

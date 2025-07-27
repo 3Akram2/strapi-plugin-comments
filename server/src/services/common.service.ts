@@ -220,23 +220,40 @@ const commonService = ({ strapi }: StrapiContext) => ({
       fields,
       isAdmin = false,
       authorId,
+      authorDocumentId,
     }: clientValidator.FindAllPerAuthorValidatorSchema,
     isStrapiAuthor: boolean = false,
   ) {
     {
-      if (isNil(authorId)) {
+      if (isNil(authorId) && isNil(authorDocumentId)) {
         return {
           data: [],
         };
       }
 
-      const authorQuery = isStrapiAuthor ? {
-        authorUser: {
-          id: authorId,
-        },
-      } : {
-        authorId,
-      };
+      let authorQuery = {};
+      
+      if (isStrapiAuthor) {
+        if (authorDocumentId) {
+          authorQuery = {
+            authorUser: {
+              documentId: authorDocumentId,
+            },
+          };
+        } else if (authorId) {
+          authorQuery = {
+            authorUser: {
+              id: authorId,
+            },
+          };
+        }
+      } else {
+        if (authorDocumentId) {
+          authorQuery = { authorDocumentId };
+        } else if (authorId) {
+          authorQuery = { authorId };
+        }
+      }
 
       const response = await this.findAllFlat({
         filters: {

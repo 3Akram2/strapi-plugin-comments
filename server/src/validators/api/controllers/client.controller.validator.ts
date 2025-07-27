@@ -147,7 +147,8 @@ export const findAllPerAuthorValidator = (params: object, payload: object) => {
   })
   .merge(z.object({
     type: z.union([z.literal(AUTHOR_TYPE.GENERIC), z.literal('generic')]).optional(),
-    authorId: z.union([z.string(), z.number()]),
+    authorId: z.union([z.string(), z.number()]).optional(),
+    authorDocumentId: z.string().optional(),
   }));
 
 

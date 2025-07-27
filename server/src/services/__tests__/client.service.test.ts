@@ -114,6 +114,7 @@ describe('client.service', () => {
       expect(mockCommentRepository.create).toHaveBeenCalledWith({
         data: {
           authorId: mockUser.id,
+          authorDocumentId: null,
           authorEmail: mockUser.email,
           authorName: mockUser.username,
           authorAvatar: 'avatar-url',
@@ -153,6 +154,7 @@ describe('client.service', () => {
       expect(mockCommentRepository.create).toHaveBeenCalledWith({
         data: {
           authorId: mockUser.id,
+          authorDocumentId: null,
           authorEmail: mockUser.email,
           authorName: mockUser.username,
           authorAvatar: 'avatar-url',
@@ -202,6 +204,7 @@ describe('client.service', () => {
       expect(mockCommentRepository.create).toHaveBeenCalledWith({
         data: {
           authorId: mockAuthor.id,
+          authorDocumentId: null,
           authorName: mockAuthor.name,
           authorEmail: mockAuthor.email,
           authorAvatar: mockAuthor.avatar,
@@ -241,6 +244,7 @@ describe('client.service', () => {
       expect(mockCommentRepository.create).toHaveBeenCalledWith({
         data: {
           authorId: mockUser.id,
+          authorDocumentId: null,
           authorEmail: mockUser.email,
           authorName: mockUser.username,
           authorAvatar: null,

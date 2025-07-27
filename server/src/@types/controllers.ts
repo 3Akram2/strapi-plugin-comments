@@ -3,6 +3,7 @@ import { Context } from 'koa';
 
 export type AdminUser = {
   id: string | number;
+  documentId?: string;
   email: string;
   username: string;
   avatar?: string;

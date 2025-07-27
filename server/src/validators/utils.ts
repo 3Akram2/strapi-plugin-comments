@@ -143,6 +143,7 @@ export const getRelationValidator = (enabledCollections: string[]) => z
 
 export const externalAuthorSchema = z.object({
   id: z.union([z.number(), z.string()]),
+  documentId: z.string().optional(),
   name: z.string().min(1).max(100).optional(),
   email: z.string().email(),
   avatar: z.string().url().optional(),
