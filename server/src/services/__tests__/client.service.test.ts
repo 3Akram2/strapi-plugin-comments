@@ -88,7 +88,7 @@ describe('client.service', () => {
       const service = getService(strapi);
       const mockEntity = { id: 1, content: 'Test comment' };
       const mockSanitizedEntity = { id: 1, content: 'Clean comment' };
-      const mockDbUser = { id: 1, avatar: { url: 'avatar-url' } };
+      const mockDbUser = { id: 1, image: { url: 'avatar-url' } };
 
       mockCommonService.parseRelationString.mockReturnValue({
         uid: 'api::test.test',
@@ -109,7 +109,7 @@ describe('client.service', () => {
       expect(result).toEqual(mockSanitizedEntity);
       expect(mockUserQuery().findOne).toHaveBeenCalledWith({
         where: { id: mockUser.id },
-        populate: ['avatar'],
+        populate: ['image'],
       });
       expect(mockCommentRepository.create).toHaveBeenCalledWith({
         data: {
@@ -132,7 +132,7 @@ describe('client.service', () => {
       const service = getService(strapi);
       const mockEntity = { id: 1, content: 'Test comment' };
       const mockSanitizedEntity = { id: 1, content: 'Clean comment' };
-      const mockDbUser = { id: 1, avatar: { url: 'avatar-url' } };
+      const mockDbUser = { id: 1, image: { url: 'avatar-url' } };
 
       mockCommonService.parseRelationString.mockReturnValue({
         uid: 'api::test.test',
@@ -430,7 +430,7 @@ describe('client.service', () => {
     it('should mark comment as removed when all validations pass', async () => {
       const strapi = getStrapi();
       const service = getService(strapi);
-      const mockEntity = { id: 1, content: 'Test comment', removed: true };
+      const mockEntity = { id: 1, content: 'Test comment', removed: true, author: { id: 1 } };
       const mockSanitizedEntity = { id: 1, content: '[removed]', removed: true };
 
       jest.spyOn(service, 'markAsRemovedNested').mockResolvedValue(true);

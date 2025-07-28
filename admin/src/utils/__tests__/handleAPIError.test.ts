@@ -16,7 +16,7 @@ describe('handleAPIError()', () => {
 
     expect(() => handleAPIError(err, notify, 'message')).toThrow(err);
     expect(notify).toHaveBeenCalledWith({
-      message: "comments.message",
+      message: "@3akram2/strapi-plugin-comments.message",
       type: "warning",
     });
   });

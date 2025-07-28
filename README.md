@@ -406,7 +406,7 @@ _Generic (non Strapi User)_
     "avatar": "<any image url>"
   },
   "content": "My sample response",
-  "threadOf": 2 // id of comment we would like to start / continue the thread (Optional)
+  "threadOf": 2 // id or documentId of comment we would like to start / continue the thread (Optional)
 }
 ```
 
@@ -417,9 +417,11 @@ _Strapi user_
 ```json
 {
   "content": "My sample response",
-  "threadOf": 2 // id of comment we would like to start / continue the thread (Optional)
+  "threadOf": 2 // id or documentId of comment we would like to start / continue the thread (Optional)
 }
 ```
+
+> **Note**: The `threadOf` field now supports both numeric IDs and Strapi v5 `documentId` strings for maximum compatibility.
 
 _Multi-language entities_
 
@@ -506,7 +508,16 @@ _GraphQL equivalent: [Public GraphQL API -> Delete Comment](#delete-comment-1)_
 
 Deletes a specified Comment based on it `commentId` and related to specified instance of Content Type like for example `Page` with `documentId: njx99iv4p4txuqp307ye8625`.
 
-**Example URL**: `https://localhost:1337/api/comments/api::page.page:njx99iv4p4txuqp307ye8625/comment/1?authorId=1`
+**Example URLs**:
+- `https://localhost:1337/api/comments/api::page.page:njx99iv4p4txuqp307ye8625/comment/1?authorId=1` (using numeric comment ID and author ID)
+- `https://localhost:1337/api/comments/api::page.page:njx99iv4p4txuqp307ye8625/comment/abc123def?authorDocumentId=xyz789` (using documentIds)
+
+**Query Parameters**:
+- `authorId` - Numeric ID of the comment author (for backward compatibility)
+- `authorDocumentId` - Document ID of the comment author (Strapi v5)
+- `commentDocumentId` - Document ID of the comment (alternative to URL path parameter)
+
+> **Note**: The comment identifier in the URL path supports both numeric IDs and Strapi v5 `documentId` strings. Author identification supports both `authorId` and `authorDocumentId` for maximum flexibility.
 
 **Example response body**
 
@@ -740,7 +751,7 @@ mutation createComment {
     input: {
       relation: "api::page.page:njx99iv4p4txuqp307ye8625"
       content: "Hello World!"
-      threadOf: 3
+      threadOf: 3 # Can be numeric ID or documentId string
       author: { id: "12345678", name: "John Wick", email: "test@test.pl" } # Optional if using auth / authz requests
     }
   ) {
@@ -756,6 +767,8 @@ mutation createComment {
   }
 }
 ```
+
+> **Note**: The `threadOf` field in GraphQL mutations also supports both numeric IDs and Strapi v5 `documentId` strings.
 
 **Example response**
 
@@ -840,9 +853,9 @@ _REST API equivalent: [Public REST API -> Delete Comment](#delete-comment)_
 mutation removeComment {
   removeComment(
     input: {
-      id: 33
+      id: 33 # Can be numeric ID or documentId string
       relation: "api::page.page:njx99iv4p4txuqp307ye8625"
-      author: { id: "12345678" } # Optional if using auth / authz requests
+      author: { id: "12345678" } # Optional if using auth / authz requests. Supports both ID and documentId
     }
   ) {
     id
@@ -850,6 +863,8 @@ mutation removeComment {
   }
 }
 ```
+
+> **Note**: The `id` field supports both numeric IDs and Strapi v5 `documentId` strings. The `author.id` field also supports both formats for maximum compatibility.
 
 **Example response**
 
