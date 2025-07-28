@@ -35,7 +35,12 @@ export const updateCommentValidator = (
 ) => {
   return validate(
     getCommentSchema(enabledCollections).pick({ content: true, relation: true, author: true })
-                                        .merge(getStringToNumberValidator({ commentId: AVAILABLE_OPERATORS.single }))
+                                        .merge(z.object({
+                                          commentId: z.union([z.string(), z.number()]).optional(),
+                                          commentDocumentId: z.string().optional(),
+                                        })).refine(data => data.commentId || data.commentDocumentId, {
+                                          message: "Either commentId or commentDocumentId must be provided"
+                                        })
                                         .safeParse(payload),
   );
 };

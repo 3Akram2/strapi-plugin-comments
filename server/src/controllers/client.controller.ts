@@ -69,16 +69,33 @@ const controllers = ({ strapi }: StrapiContext) => ({
     throw throwError(ctx, unwrapEither(result));
   },
 
-  async put(ctx: RequestContext<{ content: string, author: unknown }>) {
+  async put(ctx: RequestContext<{ content: string, author: unknown, commentDocumentId?: string }>) {
     const { user } = ctx.state;
     const configResult = await this.getStoreRepository().get(true);
     if (isRight(configResult)) {
       const config = unwrapEither(configResult);
-      const result = clientValidator.updateCommentValidator(config.enabledCollections, {
-        ...ctx.params,
+      
+      // Handle commentId from URL - it could be numeric ID or documentId
+      const urlCommentId = (ctx.params as any).commentId;
+      const bodyCommentDocumentId = ctx.request.body.commentDocumentId;
+      
+      // Determine if URL commentId is numeric or documentId
+      const isNumericId = !isNaN(Number(urlCommentId)) && isFinite(Number(urlCommentId));
+      
+      const validationPayload = {
+        relation: (ctx.params as any).relation,
         content: ctx.request.body.content,
         author: ctx.request.body.author,
-      });
+        // Use commentId if it's numeric, otherwise use commentDocumentId
+        ...(isNumericId 
+          ? { commentId: urlCommentId }
+          : { commentDocumentId: urlCommentId }
+        ),
+        // Also include body commentDocumentId if provided (takes precedence)
+        ...(bodyCommentDocumentId ? { commentDocumentId: bodyCommentDocumentId } : {}),
+      };
+      
+      const result = clientValidator.updateCommentValidator(config.enabledCollections, validationPayload);
       if (isRight(result)) {
         return await this.getService('client').update(
           result.right,

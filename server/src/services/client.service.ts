@@ -20,12 +20,33 @@ export const clientService = ({ strapi }: StrapiContext) => {
     user?: AdminUser
   ) => {
     if (user) {
-      const dbUser = await strapi
-        .query('plugin::users-permissions.user')
-        .findOne({
-          where: { id: user.id },
-          populate: ['image'],
-        });
+      // Try to fetch user data using Document Service API first (Strapi v5), fallback to query API
+      let dbUser;
+      try {
+        if (user.documentId) {
+          dbUser = await strapi.documents('plugin::users-permissions.user').findOne({
+            documentId: user.documentId,
+            populate: ['image'],
+          });
+        } else {
+          // Fallback to query API if no documentId
+          dbUser = await strapi
+            .query('plugin::users-permissions.user')
+            .findOne({
+              where: { id: user.id },
+              populate: ['image'],
+            });
+        }
+      } catch (error) {
+        // Fallback to query API on error
+        dbUser = await strapi
+          .query('plugin::users-permissions.user')
+          .findOne({
+            where: { id: user.id },
+            populate: ['image'],
+          });
+      }
+      
       return {
         authorId: user.id,
         authorDocumentId: user.documentId || dbUser?.documentId || null,
@@ -137,21 +158,50 @@ export const clientService = ({ strapi }: StrapiContext) => {
     },
 
     // Update a comment
-    async update({ commentId, content, author, relation }: client.UpdateCommentValidatorSchema, user?: AdminUser) {
+    async update({ commentId, commentDocumentId, content, author, relation }: client.UpdateCommentValidatorSchema, user?: AdminUser) {
       if (!author && !this.getCommonService().isValidUserContext(user)) {
         throw resolveUserContextError(user);
       }
       const authorId = user?.id || author?.id;
       if (await this.getCommonService().checkBadWords(content)) {
         const blockedAuthorProps = await this.getCommonService().getConfig(CONFIG_PARAMS.AUTHOR_BLOCKED_PROPS, []);
-        const existingComment = await this.getCommonService().findOne({ id: commentId, related: relation });
+        
+        // Build the find criteria - support both ID types
+        const findCriteria: any = { related: relation };
+        if (commentId) {
+          // Try to determine if it's numeric or documentId
+          const isNumericId = !isNaN(Number(commentId)) && isFinite(Number(commentId));
+          if (isNumericId) {
+            findCriteria.id = commentId;
+          } else {
+            findCriteria.documentId = commentId;
+          }
+        } else if (commentDocumentId) {
+          findCriteria.documentId = commentDocumentId;
+        }
+
+        const existingComment = await this.getCommonService().findOne(findCriteria);
 
         if (existingComment && existingComment.author?.id?.toString() === authorId?.toString()) {
-          const entity = await getCommentRepository(strapi).update({
-            where: { id: commentId },
-            data: { content },
-            populate: { threadOf: true, authorUser: true },
-          });
+          let entity;
+          
+          // Update using appropriate method
+          if (existingComment.documentId) {
+            // Use Document Service API for updates when we have documentId
+            entity = await strapi.documents('plugin::comments.comment').update({
+              documentId: existingComment.documentId,
+              data: { content } as any,
+              populate: { threadOf: true, authorUser: true },
+            });
+          } else {
+            // Use repository for ID-based updates
+            entity = await getCommentRepository(strapi).update({
+              where: { id: existingComment.id },
+              data: { content },
+              populate: { threadOf: true, authorUser: true },
+            });
+          }
+          
           return this.getCommonService().sanitizeCommentEntity(entity, blockedAuthorProps);
         }
       }

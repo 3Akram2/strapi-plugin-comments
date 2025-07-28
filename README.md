@@ -421,6 +421,14 @@ _Strapi user_
 }
 ```
 
+**Create reply using document ID:**
+```json
+{
+  "content": "This is a reply to the comment",
+  "threadOf": "abc123def456ghi789" // documentId of parent comment
+}
+```
+
 > **Note**: The `threadOf` field now supports both numeric IDs and Strapi v5 `documentId` strings for maximum compatibility.
 
 _Multi-language entities_
@@ -461,7 +469,9 @@ _GraphQL equivalent: [Public GraphQL API -> Update Comments](#update-comment-1)_
 
 Updates a specified Comment content based on it `commentId` and related to specified instance of Content Type like for example `Page` with `documentId: njx99iv4p4txuqp307ye8625`
 
-**Example URL**: `https://localhost:1337/api/comments/api::page.page:njx99iv4p4txuqp307ye8625/comment/2`
+**Example URLs**: 
+- `https://localhost:1337/api/comments/api::page.page:njx99iv4p4txuqp307ye8625/comment/2` (using numeric comment ID)
+- `https://localhost:1337/api/comments/api::page.page:njx99iv4p4txuqp307ye8625/comment/abc123def456` (using document ID)
 
 **Example request body**
 
@@ -483,6 +493,14 @@ _Strapi user_
 ```json
 {
   "content": "My sample response"
+}
+```
+
+**Update using document ID:**
+```json
+{
+  "commentDocumentId": "abc123def456ghi789",
+  "content": "Updated comment content"
 }
 ```
 
@@ -800,7 +818,7 @@ _REST API equivalent: [Public REST API -> Update Comment](#update-comment)_
 mutation updateComment {
   updateComment(
     input: {
-      id: 34
+      id: 34 # Can be numeric ID or documentId string
       relation: "api::page.page:njx99iv4p4txuqp307ye8625"
       content: "I've changed it!"
       author: { id: "12345678" } # Optional if using auth / authz requests
@@ -820,6 +838,8 @@ mutation updateComment {
   }
 }
 ```
+
+> **Note**: The `id` field supports both numeric IDs and Strapi v5 `documentId` strings for maximum compatibility.
 
 **Example response**
 
