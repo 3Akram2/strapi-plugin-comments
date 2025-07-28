@@ -24,14 +24,14 @@ export const clientService = ({ strapi }: StrapiContext) => {
         .query('plugin::users-permissions.user')
         .findOne({
           where: { id: user.id },
-          populate: ['avatar'],
+          populate: ['image'],
         });
       return {
         authorId: user.id,
         authorDocumentId: user.documentId || dbUser?.documentId || null,
         authorName: user.username,
         authorEmail: user.email,
-        authorAvatar: dbUser?.avatar?.url || null,
+        authorAvatar: dbUser?.image?.url || null,
       };
     } else if (author) {
       return {
@@ -209,45 +209,101 @@ export const clientService = ({ strapi }: StrapiContext) => {
       }
     },
 
-    async markAsRemoved({ commentId, relation, authorId }: client.RemoveCommentValidatorSchema, user: AdminUser) {
-      if (!authorId && !this.getCommonService().isValidUserContext(user)) {
+    async markAsRemoved({ commentId, commentDocumentId, relation, authorId, authorDocumentId }: client.RemoveCommentValidatorSchema, user: AdminUser) {
+      if (!authorId && !authorDocumentId && !this.getCommonService().isValidUserContext(user)) {
         throw resolveUserContextError(user);
       }
 
       const author = user?.id || authorId;
+      const authorDocId = user?.documentId || authorDocumentId;
 
-      if (!author) {
+      if (!author && !authorDocId) {
         throw new PluginError(
           403,
-          `You're not allowed to take an action on that entity. Make sure that you've provided proper "authorId" or authenticated your request properly.`,
+          `You're not allowed to take an action on that entity. Make sure that you've provided proper "authorId", "authorDocumentId" or authenticated your request properly.`,
         );
       }
 
       try {
-        const byAuthor = user?.id
-          ? {
-            authorUser: author,
+        // First, find the comment by ID/documentId and relation
+        const commentFilter: any = { related: relation };
+        if (commentId) {
+          // Try to find by ID first, if it's numeric, otherwise try by documentId
+          const isNumericId = !isNaN(Number(commentId)) && isFinite(Number(commentId));
+          if (isNumericId) {
+            commentFilter.id = commentId;
+          } else {
+            commentFilter.documentId = commentId;
           }
-          : {
-            authorId: author,
-          };
-        const entity = await this.getCommonService().findOne({
-          id: commentId,
-          related: relation,
-          ...byAuthor,
-        });
-        if (entity) {
-          const removedEntity = await getCommentRepository(strapi)
-          .update({
-            where: {
-              id: commentId,
-              related: relation,
-            },
-            data: { removed: true },
-            populate: { threadOf: true, authorUser: true },
-          });
+        } else if (commentDocumentId) {
+          commentFilter.documentId = commentDocumentId;
+        }
 
-          await this.markAsRemovedNested(commentId, true);
+        let entity;
+        try {
+          entity = await this.getCommonService().findOne(commentFilter);
+        } catch (error) {
+          // If initial search fails and we tried by ID with a string, try by documentId
+          if (commentId && typeof commentId === 'string' && !commentDocumentId) {
+            try {
+              entity = await this.getCommonService().findOne({
+                related: relation,
+                documentId: commentId
+              });
+            } catch (secondError) {
+              throw error; // Throw the original error
+            }
+          } else {
+            throw error;
+          }
+        }
+        
+        // Then verify ownership
+        if (entity) {
+          const isOwner = user?.id 
+            ? entity.author?.id?.toString() === user.id.toString()
+            : authorDocId 
+              ? entity.author?.documentId === authorDocId
+              : entity.author?.id?.toString() === author?.toString();
+          
+          if (!isOwner) {
+            throw new PluginError(
+              403,
+              `You're not allowed to delete this comment. You can only delete your own comments.`,
+            );
+          }
+        }
+        if (entity) {
+          // Update the comment using the entity we found
+          let removedEntity;
+          if (entity.documentId) {
+            // Use Document Service API for updates when we have documentId
+            removedEntity = await strapi.documents('plugin::comments.comment').update({
+              documentId: entity.documentId,
+              data: { removed: true } as any,
+              populate: { threadOf: true, authorUser: true },
+            });
+          } else {
+            // Use repository for ID-based updates
+            const updateWhere: any = { related: relation };
+            if (commentId) {
+              updateWhere.id = commentId;
+            } else if (commentDocumentId) {
+              updateWhere.documentId = commentDocumentId;
+            } else {
+              updateWhere.id = entity.id;
+            }
+
+            removedEntity = await getCommentRepository(strapi)
+            .update({
+              where: updateWhere,
+              data: { removed: true },
+              populate: { threadOf: true, authorUser: true },
+            });
+          }
+
+          // Use the entity's ID for nested removal (always use numeric ID for this)
+          await this.markAsRemovedNested(entity.id, true);
           const doNotPopulateAuthor = await this.getCommonService().getConfig(CONFIG_PARAMS.AUTHOR_BLOCKED_PROPS, []);
 
           return this.getCommonService().sanitizeCommentEntity(removedEntity, doNotPopulateAuthor);

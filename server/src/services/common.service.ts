@@ -188,13 +188,37 @@ const commonService = ({ strapi }: StrapiContext) => ({
 
   // Find single comment
   async findOne(criteria: Partial<Params['where']>) {
-    const entity = await getCommentRepository(strapi).findOne({
-      where: criteria,
-      populate: {
-        reports: true,
-        authorUser: true,
-      },
-    });
+    let entity;
+    
+    // If criteria includes documentId, use Document Service API
+    if (criteria.documentId) {
+      try {
+        entity = await strapi.documents('plugin::comments.comment').findOne({
+          documentId: criteria.documentId,
+          populate: {
+            reports: true,
+            authorUser: true,
+          },
+        });
+        
+        // Apply additional filters if provided (like 'related')
+        if (entity && criteria.related && entity.related !== criteria.related) {
+          entity = null;
+        }
+      } catch (error) {
+        entity = null;
+      }
+    } else {
+      // Use repository for ID-based queries
+      entity = await getCommentRepository(strapi).findOne({
+        where: criteria,
+        populate: {
+          reports: true,
+          authorUser: true,
+        },
+      });
+    }
+    
     if (!entity) {
       throw new PluginError(400, 'Comment does not exist. Check your payload please.');
     }

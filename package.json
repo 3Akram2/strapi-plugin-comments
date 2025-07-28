@@ -1,5 +1,5 @@
 {
-  "name": "strapi-plugin-comments",
+  "name": "@3akram2/strapi-plugin-comments",
   "version": "3.0.14",
   "description": "Strapi - Comments plugin",
   "strapi": {
@@ -43,11 +43,12 @@
     "build:server:watch": "tsc -p ./server/tsconfig.json --watch",
     "verify": "strapi-plugin verify",
     "watch": "strapi-plugin watch",
-    "watch:link": "strapi-plugin watch:link"
+    "watch:link": "strapi-plugin watch:link",
+    "postinstall": "yarn build || npm run build || echo 'Please build manually'"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/VirtusLab-Open-Source/strapi-plugin-comments"
+    "url": "https://github.com/3Akram2/strapi-plugin-comments"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.40.0",

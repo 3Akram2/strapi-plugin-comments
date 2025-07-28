@@ -181,8 +181,12 @@ export type ReportAbuseValidatorSchema = ExtractRightEither<ReturnType<typeof re
 const getRemoveCommentSchema = (enabledCollections: string[]) => {
   return z.object({
     relation: getRelationValidator(enabledCollections),
-    commentId: z.union([z.string(), z.number()]),
-    authorId: z.union([z.string(), z.number()]),
+    commentId: z.union([z.string(), z.number()]).optional(),
+    commentDocumentId: z.string().optional(),
+    authorId: z.union([z.string(), z.number()]).optional(),
+    authorDocumentId: z.string().optional(),
+  }).refine(data => data.commentId || data.commentDocumentId, {
+    message: "Either commentId or commentDocumentId must be provided"
   });
 };
 
