@@ -1,6 +1,6 @@
 {
   "name": "@3akram2/strapi-plugin-comments",
-  "version": "3.0.17",
+  "version": "3.0.18",
   "description": "Strapi - Comments plugin",
   "strapi": {
     "name": "comments",

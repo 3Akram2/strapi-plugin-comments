@@ -1,9 +1,11 @@
+A custom fork of [strapi-plugin-comments](https://github.com/VirtusLab-Open-Source/strapi-plugin-comments) with additional features and modifications.
+
 <div align="center" style="max-width: 10rem; margin: 0 auto">
   <img style="width: 150px; height: auto;" src="https://www.sensinum.com/img/open-source/strapi-plugin-comments/logo.png" alt="Logo - Strapi Comments plugin" />
 </div>
 <div align="center">
-  <h1>Strapi - Comments plugin</h1>
-  <p>Powerful Strapi based comments moderation tool for you and your users</p>
+  <h1>Strapi - Comments plugin (Enhanced Fork)</h1>
+  <p>Powerful Strapi based comments moderation tool for you and your users - Enhanced with Strapi v5 Document ID support</p>
   <a href="https://www.npmjs.org/package/strapi-plugin-comments">
     <img alt="GitHub package.json version" src="https://img.shields.io/github/package-json/v/VirtusLab-Open-Source/strapi-plugin-comments?label=npm&logo=npm">
   </a>
@@ -17,6 +19,41 @@
     <img src="https://codecov.io/gh/VirtusLab-Open-Source/strapi-plugin-comments/coverage.svg?branch=master" alt="codecov.io" />
   </a>
 </div>
+
+---
+
+## 🚀 Fork Enhancements
+
+This fork includes the following enhancements over the original plugin:
+
+### 1. **Comprehensive Strapi v5 Document ID Support**
+- Added `authorDocumentId` field to store Strapi v5 document IDs alongside traditional numeric IDs
+- All CRUD operations now support both numeric IDs and document IDs interchangeably
+- Enhanced author identification with dual ID system support
+
+### 2. **Email Notification Optimization**
+- Disabled email notifications for replies to prevent 6-minute timeout issues
+- Can be re-enabled by removing the early return in `sendResponseNotification` method
+
+### 3. **Enhanced Update Functionality**
+- Update comments using either numeric ID or document ID in URL path
+- Support for `commentDocumentId` in request body
+- Intelligent ID type detection with automatic fallback logic
+
+### 4. **Advanced Delete Operations**
+- Delete comments using both `authorId` and `authorDocumentId` for ownership verification
+- Support for `commentDocumentId` as alternative to URL parameter
+- Multi-layered lookup with comprehensive error handling
+
+### 5. **Improved Threading Support**
+- `threadOf` parameter accepts both numeric IDs and document IDs
+- Automatic detection and conversion between ID types
+- Enhanced error messages for invalid thread references
+
+### 6. **Additional Features**
+- Added `reactionsCount` field for tracking comment reactions
+- Modified bootstrap logic to use document IDs for entity relations
+- Full backward compatibility with existing numeric ID implementations
 
 ---
 
