@@ -1,6 +1,6 @@
 {
   "name": "@3akram2/strapi-plugin-comments",
-  "version": "3.0.18",
+  "version": "3.0.19",
   "description": "Strapi - Comments plugin",
   "strapi": {
     "name": "comments",
@@ -60,7 +60,6 @@
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.22.3",
     "sanitize-html": "^2.13.1",
-    "strapi-plugin-comments": "file:/Users/omar/development/metaCTO/strapi-plugin-comments",
     "styled-components": "6.1.8",
     "zod": "^3.23.8",
     "zustand": "^5.0.0-rc.2"
