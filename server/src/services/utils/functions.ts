@@ -74,6 +74,7 @@ export const buildAuthorModel = (
     authorId,
     authorDocumentId,
     authorName,
+    authorUsername,
     authorEmail,
     authorAvatar,
     ...rest
@@ -82,6 +83,7 @@ export const buildAuthorModel = (
 
   if (authorUser && typeof authorUser !== 'string') {
     const user = authorUser as StrapiAuthorUser;
+    const displayName = getAuthorName(user) || user.username;
     author = fieldsToPopulate.reduce(
       (prev, curr) => ({
         ...prev,
@@ -90,7 +92,8 @@ export const buildAuthorModel = (
       {
         id: user.id,
         documentId: user.documentId,
-        name: user.username,
+        name: displayName,
+        username: user.username, // Always include username from authorUser
         email: user.email,
         avatar: user.avatar,
       },
@@ -100,6 +103,7 @@ export const buildAuthorModel = (
       id: authorId,
       documentId: authorDocumentId,
       name: authorName,
+      username: authorUsername || authorName, // Use stored authorUsername or fallback to name
       email: authorEmail,
       avatar: authorAvatar,
     };
@@ -125,16 +129,23 @@ export const resolveUserContextError = (user?: AdminUser | StrapiUser): PluginEr
 };
 
 type AuthorNameProps = {
+  lastName?: string;
+  firstName?: string;
+  username?: string;
+  // Legacy support for lowercase variants
   lastname?: string;
   firstname?: string;
-  username?: string;
 };
 
 export const getAuthorName = (author: AuthorNameProps): string => {
-  const { lastname, username, firstname } = author;
+  const { lastName, firstName, username, lastname, firstname } = author;
 
-  if (lastname && firstname) {
-    return `${firstname} ${lastname}`;
+  // Try camelCase first, fallback to lowercase for backward compatibility
+  const first = firstName || firstname;
+  const last = lastName || lastname;
+
+  if (last && first) {
+    return `${first} ${last}`;
   }
-  return username || firstname || '';
+  return username || first || '';
 };

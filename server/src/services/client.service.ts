@@ -50,7 +50,8 @@ export const clientService = ({ strapi }: StrapiContext) => {
       return {
         authorId: user.id,
         authorDocumentId: user.documentId || dbUser?.documentId || null,
-        authorName: user.username,
+        authorName: `${dbUser?.firstName || ''} ${dbUser?.lastName || ''}`.trim() || user.username,
+        authorUsername: user.username,
         authorEmail: user.email,
         authorAvatar: dbUser?.image?.url || null,
       };
@@ -59,6 +60,7 @@ export const clientService = ({ strapi }: StrapiContext) => {
         authorId: author.id,
         authorDocumentId: author.documentId || null,
         authorName: author.name,
+        authorUsername: (author as any).username || author.name,
         authorEmail: author.email,
         authorAvatar: author.avatar,
       };

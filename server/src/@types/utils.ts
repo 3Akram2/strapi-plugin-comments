@@ -47,6 +47,7 @@ export type CommentAuthor = {
   id: Id;
   documentId?: string;
   name?: string;
+  username?: string;
   email?: string;
   avatar?: string | object;
 };
@@ -55,6 +56,7 @@ export type CommentAuthorPartial = {
   authorId?: Id;
   authorDocumentId?: string;
   authorName?: string;
+  authorUsername?: string;
   authorEmail?: string;
   authorAvatar?: string;
   authorUser?: unknown;

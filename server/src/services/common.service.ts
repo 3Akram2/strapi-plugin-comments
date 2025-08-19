@@ -58,16 +58,26 @@ const commonService = ({ strapi }: StrapiContext) => ({
 
   sanitizeCommentEntity(entity: Comment | CommentWithRelated, blockedAuthors: string[], omitProps: Array<keyof Comment> = [], populate: any = {}): Comment {
     const fieldsToPopulate = Array.isArray(populate) ? populate : Object.keys(populate || {});
-    return filterItem({
-      ...buildAuthorModel(
-        {
-          ...entity,
-          threadOf: isObject(entity.threadOf) ? buildAuthorModel(entity.threadOf, blockedAuthors, fieldsToPopulate) : entity.threadOf,
-        },
-        blockedAuthors,
-        fieldsToPopulate,
-      ),
-    }, omitProps) as Comment;
+    const processedEntity = buildAuthorModel(
+      {
+        ...entity,
+        threadOf: isObject(entity.threadOf) ? buildAuthorModel(entity.threadOf, blockedAuthors, fieldsToPopulate) : entity.threadOf,
+      },
+      blockedAuthors,
+      fieldsToPopulate,
+    );
+    
+    // Remove individual author fields that should not appear at root level
+    return filterItem(processedEntity, [
+      ...omitProps,
+      'authorUser',
+      'authorId', 
+      'authorDocumentId',
+      'authorName',
+      'authorUsername',
+      'authorEmail',
+      'authorAvatar'
+    ]) as Comment;
   },
 
   // Find comments in the flat structure

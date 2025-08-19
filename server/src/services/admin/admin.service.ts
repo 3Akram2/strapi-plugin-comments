@@ -314,6 +314,7 @@ export default ({ strapi }: StrapiContext) => {
           threadOf: id,
           authorId: author.id,
           authorName: getAuthorName(author),
+          authorUsername: author.username || author.firstname || '',
           authorEmail: author.email,
           related: entity.related,
           isAdminComment: true,

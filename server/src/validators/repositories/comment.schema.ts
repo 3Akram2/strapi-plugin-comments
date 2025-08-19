@@ -17,6 +17,7 @@ export const dbBaseCommentSchema = z.object({
   authorId: z.string().nullable(),
   authorDocumentId: z.string().nullable(),
   authorName: z.string().nullable(),
+  authorUsername: z.string().nullable(),
   authorEmail: z.string().email().nullable(),
   authorAvatar: z.string().nullable(),
   authorUser: z.union([z.string(), z.object({ id: z.number(), email: z.string().email() })]).optional().nullable(),

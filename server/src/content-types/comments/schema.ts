@@ -59,6 +59,10 @@ export default {
       type: "string",
       configurable: false,
     },
+    authorUsername: {
+      type: "string",
+      configurable: false,
+    },
     authorEmail: {
       type: "email",
       configurable: false,
