@@ -106,5 +106,11 @@ export default {
       default: 0,
       configurable: false,
     },
+    mentions: {
+      type: "relation",
+      relation: "oneToMany",
+      target: "plugin::users-permissions.user",
+      configurable: false,
+    },
   },
 };
