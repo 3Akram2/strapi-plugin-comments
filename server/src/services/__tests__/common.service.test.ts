@@ -41,21 +41,30 @@ describe('common.service', () => {
 
   const mockFindOne = jest.fn();
   const mockFindMany = jest.fn();
+  const mockDbFindOne = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockFindOne.mockReset();
+    mockFindMany.mockReset();
+    mockDbFindOne.mockReset();
     caster<jest.Mock>(getCommentRepository).mockReturnValue(mockCommentRepository);
     caster<jest.Mock>(getStoreRepository).mockReturnValue(mockStoreRepository);
   });
 
-  const getStrapi = () => caster<StrapiContext>({ 
-    strapi: { 
+  const getStrapi = () => caster<StrapiContext>({
+    strapi: {
       documents: () => ({
         findOne: mockFindOne,
         findMany: mockFindMany,
       }),
-      plugin: () => null
-    } 
+      db: {
+        query: () => ({
+          findOne: mockDbFindOne,
+        }),
+      },
+      plugin: () => null,
+    },
   });
 
   const getService = (strapi: StrapiContext) => commonService(strapi);
@@ -416,6 +425,110 @@ describe('common.service', () => {
     });
   });
 
+  describe('resolveRelatedEntity', () => {
+    it('should resolve by documentId and skip the numeric fallback when documents.findOne returns an entity', async () => {
+      const strapi = getStrapi();
+      const service = getService(strapi);
+      const resolved = { id: 7, documentId: 'doc-abc', title: 'Doc' };
+
+      mockFindOne.mockResolvedValue(resolved);
+
+      const result = await service.resolveRelatedEntity(
+        'api::test.test' as any,
+        'doc-abc',
+      );
+
+      expect(result).toEqual(resolved);
+      expect(mockFindOne).toHaveBeenCalledWith({
+        documentId: 'doc-abc',
+        locale: undefined,
+        status: 'published',
+      });
+      expect(mockDbFindOne).not.toHaveBeenCalled();
+    });
+
+    it('should fall back to strapi.db.query with Number(relatedId) when relatedId is pure digits and documentId lookup misses', async () => {
+      const strapi = getStrapi();
+      const service = getService(strapi);
+      const resolved = { id: 42, title: 'Legacy' };
+
+      mockFindOne.mockResolvedValue(null);
+      mockDbFindOne.mockResolvedValue(resolved);
+
+      const result = await service.resolveRelatedEntity(
+        'api::test.test' as any,
+        '42',
+      );
+
+      expect(result).toEqual(resolved);
+      expect(mockFindOne).toHaveBeenCalledWith({
+        documentId: '42',
+        locale: undefined,
+        status: 'published',
+      });
+      expect(mockDbFindOne).toHaveBeenCalledWith({
+        where: { id: 42 },
+      });
+    });
+
+    it('should return null when both the documentId lookup and the numeric fallback miss', async () => {
+      const strapi = getStrapi();
+      const service = getService(strapi);
+
+      mockFindOne.mockResolvedValue(null);
+      mockDbFindOne.mockResolvedValue(null);
+
+      const result = await service.resolveRelatedEntity(
+        'api::test.test' as any,
+        '42',
+      );
+
+      expect(result).toBeNull();
+      expect(mockFindOne).toHaveBeenCalledTimes(1);
+      expect(mockDbFindOne).toHaveBeenCalledTimes(1);
+    });
+
+    it('should return null without touching strapi.db.query when the missing relatedId is alphanumeric', async () => {
+      const strapi = getStrapi();
+      const service = getService(strapi);
+
+      mockFindOne.mockResolvedValue(null);
+
+      const result = await service.resolveRelatedEntity(
+        'api::test.test' as any,
+        'doc-abc',
+      );
+
+      expect(result).toBeNull();
+      expect(mockFindOne).toHaveBeenCalledTimes(1);
+      expect(mockDbFindOne).not.toHaveBeenCalled();
+    });
+
+    it('should propagate locale to both the documentId lookup and the numeric fallback', async () => {
+      const strapi = getStrapi();
+      const service = getService(strapi);
+
+      mockFindOne.mockResolvedValue(null);
+      mockDbFindOne.mockResolvedValue({ id: 42 });
+
+      const result = await service.resolveRelatedEntity(
+        'api::test.test' as any,
+        '42',
+        'fr',
+      );
+
+      expect(result).toEqual({ id: 42 });
+      expect(mockFindOne).toHaveBeenCalledWith({
+        documentId: '42',
+        locale: 'fr',
+        status: 'published',
+      });
+      expect(mockDbFindOne).toHaveBeenCalledWith({
+        where: { id: 42, locale: 'fr' },
+      });
+    });
+  });
+
   describe('mergeRelatedEntityTo', () => {
     it('should merge related entity with comment', () => {
       const strapi = getStrapi();
@@ -569,7 +682,9 @@ describe('common.service', () => {
       const result = await service.findRelatedEntitiesFor(mockComments);
 
       expect(result).toHaveLength(mockComments.length);
-      expect(result).toEqual(expect.arrayContaining([mockRelatedEntities]));
+      expect(result).toEqual(
+        expect.arrayContaining([{ ...mockRelatedEntities, originalRelatedId: '1' }]),
+      );
     });
 
     it('should return an empty array if no related entities are found', async () => {

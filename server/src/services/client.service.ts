@@ -74,7 +74,7 @@ export const clientService = ({ strapi }: StrapiContext) => {
     // Create a comment
     async create({ relation, content, threadOf, author, approvalStatus, locale }: client.NewCommentValidatorSchema, user?: AdminUser) {
       const { uid, relatedId } = this.getCommonService().parseRelationString(relation);
-      const relatedEntity = await strapi.documents(uid).findOne({ documentId: relatedId, locale });
+      const relatedEntity = await this.getCommonService().resolveRelatedEntity(uid, relatedId, locale);
       if (!relatedEntity) {
         throw new PluginError(
           400,

@@ -308,6 +308,27 @@ const commonService = ({ strapi }: StrapiContext) => ({
     }
   },
 
+  // Resolve a single related entity by documentId first, falling back to numeric id when relatedId is all digits
+  async resolveRelatedEntity(uid: UID.ContentType, relatedId: string, locale?: string | null) {
+    const documentEntity = await strapi.documents(uid as ContentTypesUUIDs).findOne({
+      documentId: relatedId,
+      locale: !isNil(locale) ? locale : undefined,
+      status: 'published',
+    });
+    if (documentEntity) {
+      return documentEntity;
+    }
+    if (/^\d+$/.test(relatedId)) {
+      return strapi.db.query(uid).findOne({
+        where: {
+          id: Number(relatedId),
+          ...(locale ? { locale } : {}),
+        },
+      });
+    }
+    return null;
+  },
+
   // Find all related entiries
   async findRelatedEntitiesFor(entries: Array<Comment>): Promise<Array<CommentRelated>> {
     const data = entries.reduce(
@@ -329,19 +350,17 @@ const commonService = ({ strapi }: StrapiContext) => ({
       Object.entries(data).map(
         async ([relatedUid, { documentIds, locale }]) => {
           return Promise.all(
-            documentIds.map((documentId, index) =>
-              strapi.documents(relatedUid as ContentTypesUUIDs).findOne({
-                documentId: documentId.toString(),
-                locale: !isNil(locale[index]) ? locale[index] : undefined,
-                status: 'published',
-              }),
-            ),
-          ).then((relatedEntities) => relatedEntities
-            .filter(_ => _).map((_) => ({
-              ..._,
-              uid: relatedUid,
-            })),
-          );
+            documentIds.map(async (relatedId, index) => {
+              const entity = await this.resolveRelatedEntity(
+                relatedUid as UID.ContentType,
+                relatedId.toString(),
+                locale?.[index],
+              );
+              return entity
+                ? { ...entity, uid: relatedUid, originalRelatedId: relatedId.toString() }
+                : null;
+            }),
+          ).then((relatedEntities) => relatedEntities.filter((_) => _));
         },
       ),
     ).then((result) => result.flat(2));
@@ -351,14 +370,22 @@ const commonService = ({ strapi }: StrapiContext) => ({
   mergeRelatedEntityTo(entity: Comment, relatedEntities: Array<CommentRelated> = []): CommentWithRelated {
     return {
       ...entity,
-      related: relatedEntities.find(
-        (relatedEntity) => {
-          if (relatedEntity.locale && entity.locale) {
-            return entity.related === `${relatedEntity.uid}:${relatedEntity.documentId}` && entity.locale === relatedEntity.locale;
-          }
-          return entity.related === `${relatedEntity.uid}:${relatedEntity.documentId}`;
-        },
-      ),
+      related: relatedEntities.find((relatedEntity) => {
+        const keyByDocumentId = `${relatedEntity.uid}:${relatedEntity.documentId}`;
+        const keyByOriginal = relatedEntity.originalRelatedId
+          ? `${relatedEntity.uid}:${relatedEntity.originalRelatedId}`
+          : null;
+        const keyMatches =
+          entity.related === keyByDocumentId ||
+          (keyByOriginal !== null && entity.related === keyByOriginal);
+        if (!keyMatches) {
+          return false;
+        }
+        if (relatedEntity.locale && entity.locale) {
+          return entity.locale === relatedEntity.locale;
+        }
+        return true;
+      }),
     };
   },
   // TODO: we need to add deepLimit to the function to prevent infinite loops

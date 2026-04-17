@@ -23,6 +23,7 @@ describe('client.service', () => {
     checkBadWords: jest.fn(),
     findOne: jest.fn(),
     sanitizeCommentEntity: jest.fn(),
+    resolveRelatedEntity: jest.fn(),
   };
 
   const mockCommentRepository = {
@@ -94,7 +95,7 @@ describe('client.service', () => {
         uid: 'api::test.test',
         relatedId: '1',
       });
-      mockFindOne.mockResolvedValue({ id: 1 });
+      mockCommonService.resolveRelatedEntity.mockResolvedValue({ id: 1 });
       mockCommonService.getConfig.mockResolvedValue([]);
       mockCommonService.isValidUserContext.mockReturnValue(true);
       mockCommonService.checkBadWords.mockResolvedValue('Test comment');
@@ -139,7 +140,7 @@ describe('client.service', () => {
         uid: 'api::test.test',
         relatedId: '1',
       });
-      mockFindOne.mockResolvedValue({ id: 1 });
+      mockCommonService.resolveRelatedEntity.mockResolvedValue({ id: 1 });
       mockCommonService.getConfig.mockResolvedValue(['api::test.test']);
       mockCommonService.isValidUserContext.mockReturnValue(true);
       mockCommonService.checkBadWords.mockResolvedValue('Test comment');
@@ -185,7 +186,7 @@ describe('client.service', () => {
         uid: 'api::test.test',
         relatedId: '1',
       });
-      mockFindOne.mockResolvedValue({ id: 1 });
+      mockCommonService.resolveRelatedEntity.mockResolvedValue({ id: 1 });
       mockCommonService.getConfig.mockResolvedValue([]);
       mockCommonService.isValidUserContext.mockReturnValue(false);
       mockCommonService.checkBadWords.mockResolvedValue('Test comment');
@@ -231,7 +232,7 @@ describe('client.service', () => {
         uid: 'api::test.test',
         relatedId: '1',
       });
-      mockFindOne.mockResolvedValue({ id: 1 });
+      mockCommonService.resolveRelatedEntity.mockResolvedValue({ id: 1 });
       mockCommonService.getConfig.mockResolvedValue([]);
       mockCommonService.isValidUserContext.mockReturnValue(true);
       mockCommonService.checkBadWords.mockResolvedValue('Test comment');
@@ -269,11 +270,76 @@ describe('client.service', () => {
         uid: 'api::test.test',
         relatedId: '1',
       });
-      mockFindOne.mockResolvedValue(null);
+      mockCommonService.resolveRelatedEntity.mockResolvedValue(null);
 
       await expect(service.create(mockPayload, mockUser)).rejects.toThrow(
         PluginError
       );
+    });
+
+    it('should resolve the related entity via resolveRelatedEntity when the relation uses a documentId', async () => {
+      const strapi = getStrapi();
+      const service = getService(strapi);
+      const mockEntity = { id: 1, content: 'Test comment' };
+      const mockSanitizedEntity = { id: 1, content: 'Clean comment' };
+      const mockDbUser = { id: 1, image: { url: 'avatar-url' } };
+
+      mockCommonService.parseRelationString.mockReturnValue({
+        uid: 'api::test.test',
+        relatedId: 'doc-abc',
+      });
+      mockCommonService.resolveRelatedEntity.mockResolvedValue({
+        id: 1,
+        documentId: 'doc-abc',
+      });
+      mockCommonService.getConfig.mockResolvedValue([]);
+      mockCommonService.isValidUserContext.mockReturnValue(true);
+      mockCommonService.checkBadWords.mockResolvedValue('Test comment');
+      mockCommentRepository.create.mockResolvedValue(mockEntity);
+      mockCommonService.sanitizeCommentEntity.mockReturnValue(mockSanitizedEntity);
+      mockUserQuery().findOne.mockResolvedValue(mockDbUser);
+
+      const result = await service.create(
+        { ...mockPayload, relation: 'api::test.test:doc-abc' as const },
+        mockUser,
+      );
+
+      expect(result).toEqual(mockSanitizedEntity);
+      expect(mockCommonService.resolveRelatedEntity).toHaveBeenCalledWith(
+        'api::test.test',
+        'doc-abc',
+        'en',
+      );
+    });
+
+    it('should resolve the related entity via resolveRelatedEntity when the relation uses a numeric id', async () => {
+      const strapi = getStrapi();
+      const service = getService(strapi);
+      const mockEntity = { id: 1, content: 'Test comment' };
+      const mockSanitizedEntity = { id: 1, content: 'Clean comment' };
+      const mockDbUser = { id: 1, image: { url: 'avatar-url' } };
+
+      mockCommonService.parseRelationString.mockReturnValue({
+        uid: 'api::test.test',
+        relatedId: '1',
+      });
+      mockCommonService.resolveRelatedEntity.mockResolvedValue({ id: 1 });
+      mockCommonService.getConfig.mockResolvedValue([]);
+      mockCommonService.isValidUserContext.mockReturnValue(true);
+      mockCommonService.checkBadWords.mockResolvedValue('Test comment');
+      mockCommentRepository.create.mockResolvedValue(mockEntity);
+      mockCommonService.sanitizeCommentEntity.mockReturnValue(mockSanitizedEntity);
+      mockUserQuery().findOne.mockResolvedValue(mockDbUser);
+
+      const result = await service.create(mockPayload, mockUser);
+
+      expect(result).toEqual(mockSanitizedEntity);
+      expect(mockCommonService.resolveRelatedEntity).toHaveBeenCalledWith(
+        'api::test.test',
+        '1',
+        'en',
+      );
+      expect(mockFindOne).not.toHaveBeenCalled();
     });
   });
 

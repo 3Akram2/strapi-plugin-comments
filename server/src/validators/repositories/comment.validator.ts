@@ -32,6 +32,7 @@ const commentRelatedSchema = z.object({
   id: z.number(),
   uid: z.string(),
   documentId: z.string(),
+  originalRelatedId: z.string().nullable().optional(),
   requireCommentsApproval: z.boolean().nullable().optional(),
   locale: z.string().nullable().optional(),
 });

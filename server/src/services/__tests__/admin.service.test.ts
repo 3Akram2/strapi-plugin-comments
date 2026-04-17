@@ -24,6 +24,7 @@ describe('admin.service', () => {
     findRelatedEntitiesFor: jest.fn(),
     mergeRelatedEntityTo: jest.fn(),
     modifiedNestedNestedComments: jest.fn(),
+    resolveRelatedEntity: jest.fn(),
   };
 
   const mockCommentRepository = {
@@ -196,17 +197,17 @@ describe('admin.service', () => {
     it('should return comment with its thread', async () => {
       const strapi = getStrapi();
       const service = getService(strapi);
-      const mockComment = { 
-        id: 1, 
+      const mockComment = {
+        id: 1,
         content: 'Test comment',
         related: 'api::test.test:1',
         threadOf: null,
       };
-      const mockRelatedEntity = { id: 1, title: 'Test', uid: 'api::test.test' };
+      const mockRelatedEntity = { id: 1, title: 'Test' };
 
       mockCommentRepository.findOne.mockResolvedValue(mockComment);
       mockCommonService.parseRelationString.mockReturnValue({ uid: 'api::test.test', relatedId: '1' });
-      mockFindOne.mockResolvedValue(mockRelatedEntity);
+      mockCommonService.resolveRelatedEntity.mockResolvedValue(mockRelatedEntity);
       mockCommonService.findAllInHierarchy.mockResolvedValue([]);
       mockCommonService.sanitizeCommentEntity.mockImplementation(comment => comment);
 
@@ -224,6 +225,51 @@ describe('admin.service', () => {
       mockCommentRepository.findOne.mockResolvedValue(null);
 
       await expect(service.findOneAndThread({ id: 1 })).rejects.toThrow('Not found');
+    });
+
+    it('should resolve a numeric-id relation via resolveRelatedEntity and attach the uid', async () => {
+      const strapi = getStrapi();
+      const service = getService(strapi);
+      const mockComment = {
+        id: 1,
+        content: 'Test comment',
+        related: 'api::test.test:42',
+        threadOf: null,
+        locale: 'en',
+      };
+      const mockRelatedEntity = { id: 42, title: 'Legacy post' };
+
+      mockCommentRepository.findOne.mockResolvedValue(mockComment);
+      mockCommonService.parseRelationString.mockReturnValue({ uid: 'api::test.test', relatedId: '42' });
+      mockCommonService.resolveRelatedEntity.mockResolvedValue(mockRelatedEntity);
+      mockCommonService.findAllInHierarchy.mockResolvedValue([]);
+      mockCommonService.sanitizeCommentEntity.mockImplementation(comment => comment);
+
+      const result = await service.findOneAndThread({ id: 1 });
+
+      expect(mockCommonService.resolveRelatedEntity).toHaveBeenCalledWith(
+        'api::test.test',
+        '42',
+        'en',
+      );
+      expect(result.entity).toEqual({ ...mockRelatedEntity, uid: 'api::test.test' });
+    });
+
+    it('should throw a 404 PluginError when the related entity cannot be resolved', async () => {
+      const strapi = getStrapi();
+      const service = getService(strapi);
+      const mockComment = {
+        id: 1,
+        content: 'Test comment',
+        related: 'api::test.test:missing',
+        threadOf: null,
+      };
+
+      mockCommentRepository.findOne.mockResolvedValue(mockComment);
+      mockCommonService.parseRelationString.mockReturnValue({ uid: 'api::test.test', relatedId: 'missing' });
+      mockCommonService.resolveRelatedEntity.mockResolvedValue(null);
+
+      await expect(service.findOneAndThread({ id: 1 })).rejects.toThrow('Relation not found');
     });
   });
 

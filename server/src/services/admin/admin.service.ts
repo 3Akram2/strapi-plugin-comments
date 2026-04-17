@@ -117,8 +117,8 @@ export default ({ strapi }: StrapiContext) => {
       }
 
       const { relatedId, uid } = this.getCommonService().parseRelationString(entity.related);
-      const relatedEntity = await strapi.documents(uid)
-        .findOne({ documentId: relatedId })
+      const relatedEntity = await this.getCommonService()
+        .resolveRelatedEntity(uid, relatedId, entity.locale ?? undefined)
         .then((_) => {
           if (!_) {
             throw new PluginError(404, 'Relation not found');
