@@ -1,0 +1,23 @@
+package.json
+  9b1f653e4736327a 3,46
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "8699356bf9778c73d46c81147d0826ac4aff13e5",
+  "prompts": {
+    "9b1f653e4736327a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "919671b5-1a59-4586-bd20-be2cfe42bcb1",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "3akram2",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 7,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}
