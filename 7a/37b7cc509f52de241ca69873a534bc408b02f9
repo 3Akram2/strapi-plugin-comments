@@ -1,0 +1,25 @@
+server/src/validators/api/controllers/client.controller.validator.ts
+  9b1f653e4736327a 171-173
+server/src/services/client.service.ts
+  9b1f653e4736327a 219-228,243-245
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "7a37b7cc509f52de241ca69873a534bc408b02f9",
+  "prompts": {
+    "9b1f653e4736327a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "919671b5-1a59-4586-bd20-be2cfe42bcb1",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "3akram2",
+      "messages": [],
+      "total_additions": 16,
+      "total_deletions": 6,
+      "accepted_lines": 16,
+      "overriden_lines": 0
+    }
+  }
+}
