@@ -18,9 +18,10 @@ const InnerApp = () => {
   return (
     <Layouts.Root sideNav={<SideNav />}>
       <Routes>
-        <Route path="/discover" element={<Discover config={config} />} />
-        <Route path="/discover/:id" element={<Details config={config} />} />
-        <Route path="/reports" element={<Reports config={config} />} />
+        <Route index element={<Navigate to="discover" replace />} />
+        <Route path="discover" element={<Discover config={config} />} />
+        <Route path="discover/:id" element={<Details config={config} />} />
+        <Route path="reports" element={<Reports config={config} />} />
         <Route path="*" element={<Navigate to="discover" replace />} />
       </Routes>
     </Layouts.Root>

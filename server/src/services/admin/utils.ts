@@ -15,7 +15,7 @@ export const getAdminServiceUtils = once((strapi: CoreStrapi) => {
       ) {
         const [operator, direction] = getOrderBy(orderBy);
         const params: Partial<DBQuery> = {
-          orderBy: orderBy ? { [operator]: direction } : undefined,
+          orderBy: { [operator]: direction },
           where: filters as Where,
           page,
           pageSize,
@@ -57,7 +57,7 @@ export const getAdminServiceUtils = once((strapi: CoreStrapi) => {
       ) {
         const [operator, direction] = getOrderBy(orderBy);
         const params: Partial<DBQuery> = {
-          orderBy: orderBy ? { [operator]: direction } : undefined,
+          orderBy: { [operator]: direction },
           where: this.getDefaultWhere(),
           page,
           pageSize,

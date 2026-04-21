@@ -83,7 +83,7 @@ export const buildAuthorModel = (
 
   if (authorUser && typeof authorUser !== 'string') {
     const user = authorUser as StrapiAuthorUser;
-    const displayName = getAuthorName(user) || user.username;
+    const displayName = user.username || getAuthorName(user);
     author = fieldsToPopulate.reduce(
       (prev, curr) => ({
         ...prev,

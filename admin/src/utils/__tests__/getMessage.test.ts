@@ -13,11 +13,11 @@ describe("getMessage()", () => {
   it("should handle simple string", () => {
     expect(getMessage("message.key")).toEqual({
       defaultMessage: "",
-      id: "@3akram2/strapi-plugin-comments.message.key",
+      id: "comments.message.key",
     });
     expect(getMessage("message.key", "message.default")).toEqual({
       defaultMessage: "message.default",
-      id: "@3akram2/strapi-plugin-comments.message.key",
+      id: "comments.message.key",
     });
   });
   it("should handle config object", () => {
@@ -30,7 +30,7 @@ describe("getMessage()", () => {
       )
     ).toEqual({
       defaultMessage: "message.default",
-      id: "@3akram2/strapi-plugin-comments.message.key",
+      id: "comments.message.key",
     });
   });
   it("should allow out of scope translates", () => {
