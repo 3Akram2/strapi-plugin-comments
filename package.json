@@ -1,6 +1,6 @@
 {
   "name": "@3akram2/strapi-plugin-comments",
-  "version": "3.0.23",
+  "version": "3.0.24",
   "description": "Strapi - Comments plugin",
   "strapi": {
     "name": "comments",
@@ -43,8 +43,7 @@
     "build:server:watch": "tsc -p ./server/tsconfig.json --watch",
     "verify": "strapi-plugin verify",
     "watch": "strapi-plugin watch",
-    "watch:link": "strapi-plugin watch:link",
-    "postinstall": "yarn build || npm run build || echo 'Please build manually'"
+    "watch:link": "strapi-plugin watch:link"
   },
   "repository": {
     "type": "git",
@@ -56,11 +55,7 @@
     "codemirror5": "npm:codemirror@^5.65.11",
     "match-sorter": "^6.3.4",
     "no-profanity": "^1.5.1",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.22.3",
     "sanitize-html": "^2.13.1",
-    "styled-components": "6.1.8",
     "zod": "^3.23.8",
     "zustand": "^5.0.0-rc.2"
   },
