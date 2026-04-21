@@ -168,7 +168,9 @@ export type FindAllPerAuthorValidatorSchema = ExtractRightEither<ReturnType<type
 const getReportAbuseSchema = (config: CommentsPluginConfig) => {
   return z.object({
     relation: getRelationValidator(config[CONFIG_PARAMS.ENABLED_COLLECTIONS]),
-    commentId: stringToNumberValidator,
+    // Accept either a numeric id (legacy) or a Strapi v5 documentId (alphanum).
+    // The service will auto-detect via isNaN() and look up accordingly.
+    commentId: z.union([z.string(), z.number()]),
     content: z.string().min(1),
     reason: z.nativeEnum(config.reportReasons),
   });

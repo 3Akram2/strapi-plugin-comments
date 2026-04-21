@@ -216,10 +216,16 @@ export const clientService = ({ strapi }: StrapiContext) => {
       }
 
       try {
-        const reportAgainstEntity = await this.getCommonService().findOne({
-          id: commentId,
-          related: relation,
-        });
+        // Support numeric id (legacy) AND Strapi v5 documentId. Same auto-detect
+        // pattern used by update / removeComment.
+        const findCriteria: any = { related: relation };
+        const isNumericId = !isNaN(Number(commentId)) && isFinite(Number(commentId));
+        if (isNumericId) {
+          findCriteria.id = commentId;
+        } else {
+          findCriteria.documentId = commentId;
+        }
+        const reportAgainstEntity = await this.getCommonService().findOne(findCriteria);
 
         if (reportAgainstEntity.isAdminComment) {
           throw new PluginError(
@@ -234,7 +240,9 @@ export const clientService = ({ strapi }: StrapiContext) => {
             data: {
               ...payload,
               resolved: false,
-              related: commentId,
+              // Always store the numeric id on the report; callers may have
+              // passed a documentId in which case we resolve to numeric here.
+              related: reportAgainstEntity.id,
             },
           });
           if (entity) {
