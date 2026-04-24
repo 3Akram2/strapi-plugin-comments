@@ -144,6 +144,7 @@ export const clientService = ({ strapi }: StrapiContext) => {
             ? APPROVAL_STATUS.PENDING
             : APPROVAL_STATUS.APPROVED,
         },
+        populate: { mentions: true, tags: true },
       });
       const entity: Comment = {
         ...comment,
@@ -193,14 +194,14 @@ export const clientService = ({ strapi }: StrapiContext) => {
             entity = await strapi.documents('plugin::comments.comment').update({
               documentId: existingComment.documentId,
               data: { content } as any,
-              populate: { threadOf: true, authorUser: true },
+              populate: { threadOf: true, authorUser: true, mentions: true, tags: true },
             });
           } else {
             // Use repository for ID-based updates
             entity = await getCommentRepository(strapi).update({
               where: { id: existingComment.id },
               data: { content },
-              populate: { threadOf: true, authorUser: true },
+              populate: { threadOf: true, authorUser: true, mentions: true, tags: true },
             });
           }
           
@@ -341,7 +342,7 @@ export const clientService = ({ strapi }: StrapiContext) => {
             removedEntity = await strapi.documents('plugin::comments.comment').update({
               documentId: entity.documentId,
               data: { removed: true } as any,
-              populate: { threadOf: true, authorUser: true },
+              populate: { threadOf: true, authorUser: true, mentions: true, tags: true },
             });
           } else {
             // Use repository for ID-based updates
@@ -358,7 +359,7 @@ export const clientService = ({ strapi }: StrapiContext) => {
             .update({
               where: updateWhere,
               data: { removed: true },
-              populate: { threadOf: true, authorUser: true },
+              populate: { threadOf: true, authorUser: true, mentions: true, tags: true },
             });
           }
 

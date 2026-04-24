@@ -126,6 +126,7 @@ describe('client.service', () => {
           locale: 'en',
           threadOf: null,
         },
+        populate: { mentions: true, tags: true },
       });
     });
 
@@ -167,6 +168,7 @@ describe('client.service', () => {
           locale: 'en',
           threadOf: null,
         },
+        populate: { mentions: true, tags: true },
       });
     });
 
@@ -218,6 +220,7 @@ describe('client.service', () => {
           locale: 'en',
           threadOf: null,
         },
+        populate: { mentions: true, tags: true },
       });
     });
 
@@ -259,6 +262,7 @@ describe('client.service', () => {
           locale: 'en',
           threadOf: null,
         },
+        populate: { mentions: true, tags: true },
       });
     });
 
@@ -373,7 +377,7 @@ describe('client.service', () => {
       expect(mockCommentRepository.update).toHaveBeenCalledWith({
         where: { id: 1 },
         data: { content: 'Updated comment' },
-        populate: { threadOf: true, authorUser: true },
+        populate: { threadOf: true, authorUser: true, mentions: true, tags: true },
       });
     });
 
@@ -396,7 +400,7 @@ describe('client.service', () => {
       expect(mockCommentRepository.update).toHaveBeenCalledWith({
         where: { id: 1 },
         data: { content: 'Updated comment' },
-        populate: { threadOf: true, authorUser: true },
+        populate: { threadOf: true, authorUser: true, mentions: true, tags: true },
       });
     });
 
@@ -520,7 +524,7 @@ describe('client.service', () => {
           related: 'api::test.test:1',
         },
         data: { removed: true },
-        populate: { threadOf: true, authorUser: true },
+        populate: { threadOf: true, authorUser: true, mentions: true, tags: true },
       });
     });
 

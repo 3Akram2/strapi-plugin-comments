@@ -166,6 +166,8 @@ describe('common.service', () => {
         populate: {
           reports: true,
           authorUser: true,
+          mentions: true,
+          tags: true,
         },
       });
     });
@@ -612,9 +614,9 @@ describe('common.service', () => {
       expect(result.data).toHaveLength(2);
       expect(result.data.every(item => !item.authorUser)).toBeTruthy();
       expect(mockCommentRepository.findWithCount).toHaveBeenCalledWith({
-        pageSize: 10, 
+        pageSize: 10,
         page: 1,
-        populate: { authorUser: true }, 
+        populate: { authorUser: true, mentions: true, tags: true },
         select: ["id", "content", "related"],
         orderBy: { createdAt: "desc" },
         where: { authorId: 1 }
@@ -662,6 +664,8 @@ describe('common.service', () => {
         orderBy: { createdAt: 'desc' },
         populate: {
           authorUser: true,
+          mentions: true,
+          tags: true,
         },
       });
     });

@@ -10,7 +10,8 @@ const getCommentSchema = (enabledCollections: string[]) => {
     relation: getRelationValidator(enabledCollections),
     content: z.string().min(1),
     author: externalAuthorSchema.optional(),
-    threadOf: z.union([z.string(), z.number()]).optional(),
+    // Mobile sends `threadOf: null` for top-level comments; accept null too.
+    threadOf: z.union([z.string(), z.number()]).nullish(),
     approvalStatus: z.nativeEnum(APPROVAL_STATUS).optional(),
     locale: z.string().optional(),
   });
@@ -59,6 +60,26 @@ const paginationSchema = z.object({
   }).optional(),
 });
 
+// Matches Strapi's native populate shape so callers can pass arrays of field
+// names (`populate[author][populate][0]=firstName`), nested objects, or the
+// simple boolean form. Downstream (`buildAuthorModel`, `parsers.flatInput`)
+// already handles all of these shapes — the only gate was this validator.
+const populateValue: z.ZodType<any> = z.lazy(() =>
+  z.union([
+    z.boolean(),
+    z.string(),
+    z.array(z.string()),
+    z
+      .object({
+        populate: populateValue.optional(),
+        fields: z.union([z.string(), z.array(z.string())]).optional(),
+        filters: z.record(z.any()).optional(),
+        sort: z.union([z.string(), z.array(z.string())]).optional(),
+      })
+      .passthrough(),
+  ])
+);
+
 const getBaseFindSchema = (enabledCollections: string[]) => {
   //   $or: [{ approvalStatus: "APPROVED" }, { isAdminComment: true }],
   const filters = getFiltersOperators({
@@ -90,7 +111,12 @@ const getBaseFindSchema = (enabledCollections: string[]) => {
         .optional(),
       isAdmin: z.boolean().optional().default(false),
       populate: z
-        .record(z.union([z.boolean(), z.object({ populate: z.boolean() })]))
+        .union([
+          z.boolean(),
+          z.string(),
+          z.array(z.string()),
+          z.record(populateValue),
+        ])
         .optional(),
       limit: stringToNumberValidator.optional(),
       skip: stringToNumberValidator.optional(),

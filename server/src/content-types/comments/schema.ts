@@ -112,5 +112,11 @@ export default {
       target: "plugin::users-permissions.user",
       configurable: false,
     },
+    tags: {
+      type: "relation",
+      relation: "oneToMany",
+      target: "api::tag.tag",
+      configurable: false,
+    },
   },
 };

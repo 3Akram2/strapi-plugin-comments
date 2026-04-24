@@ -23,12 +23,14 @@ export const flatInput = <T extends FlatInputParams>(payload: T): T => {
     fields,
     omit,
     filters = {} as BaseFilters,
-    populate = {},
+    populate,
     relation,
     pagination,
   } = payload as FlatInputParams & {
     filters?: BaseFilters;
-    populate?: Record<string, boolean | { populate: boolean }>;
+    // `populate` accepts the full Strapi query shape now (boolean, string,
+    // string[], or nested record); we only dive into it when it's an object.
+    populate?: boolean | string | string[] | Record<string, any>;
     pagination?: client.FindAllFlatSchema['pagination'];
     relation?: client.FindAllFlatSchema['relation'];
   };
@@ -38,25 +40,27 @@ export const flatInput = <T extends FlatInputParams>(payload: T): T => {
   );
   const hasRemoved = filters.$or?.some((item) => item.removed);
 
-  let basePopulate = {
-    ...populate,
+  const populateRecord: Record<string, any> =
+    populate && typeof populate === 'object' && !Array.isArray(populate)
+      ? populate
+      : {};
+
+  let basePopulate: Record<string, any> = {
+    ...populateRecord,
   };
 
-  let threadOfPopulate = {
+  let threadOfPopulate: Record<string, any> = {
     threadOf: {
       populate: {
         authorUser: true,
-        ...populate,
-      } as {
-        authorUser: boolean | { populate: boolean };
-        [key: string]: boolean | { populate: boolean };
-      },
+        ...populateRecord,
+      } as Record<string, any>,
     },
   };
 
   // Cover case when someone wants to populate author instead of authorUser
-  if ('author' in populate) {
-    const { author, ...restPopulate } = populate;
+  if ('author' in populateRecord) {
+    const { author, ...restPopulate } = populateRecord;
     basePopulate = {
       ...restPopulate,
       authorUser: author,
@@ -66,10 +70,7 @@ export const flatInput = <T extends FlatInputParams>(payload: T): T => {
         populate: {
           authorUser: author,
           ...restPopulate,
-        } as {
-          authorUser: boolean | { populate: boolean };
-          [key: string]: boolean | { populate: boolean };
-        },
+        } as Record<string, any>,
       },
     };
   }

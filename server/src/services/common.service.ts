@@ -98,6 +98,10 @@ const commonService = ({ strapi }: StrapiContext) => ({
 
     const populateClause: clientValidator.FindAllFlatSchema['populate'] = {
       authorUser: true,
+      // Default-populate the andrew-api relations so consumers (iOS) don't need
+      // to pass populate[mentions]=true&populate[tags]=true on every list call.
+      mentions: true,
+      tags: true,
       ...(isObject(populate) ? populate : {}),
     };
     const doNotPopulateAuthor = isAdmin ? [] : await this.getConfig(CONFIG_PARAMS.AUTHOR_BLOCKED_PROPS, []);
@@ -208,6 +212,8 @@ const commonService = ({ strapi }: StrapiContext) => ({
           populate: {
             reports: true,
             authorUser: true,
+            mentions: true,
+            tags: true,
           },
         });
         
@@ -225,6 +231,8 @@ const commonService = ({ strapi }: StrapiContext) => ({
         populate: {
           reports: true,
           authorUser: true,
+          mentions: true,
+          tags: true,
         },
       });
     }
