@@ -1,6 +1,6 @@
 {
   "name": "@3akram2/strapi-plugin-comments",
-  "version": "3.0.24",
+  "version": "3.0.25",
   "description": "Strapi - Comments plugin",
   "strapi": {
     "name": "comments",
@@ -138,7 +138,10 @@
       "<rootDir>/admin/jest.admin.config.ts"
     ],
     "collectCoverage": true,
-    "reporters": ["default", "jest-junit"]
+    "reporters": [
+      "default",
+      "jest-junit"
+    ]
   },
   "resolutions": {
     "minimatch": "^3.0.0",
